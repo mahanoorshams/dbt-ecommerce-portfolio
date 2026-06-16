@@ -1,119 +1,148 @@
-# dbt E-commerce Analytics Portfolio
+# E-commerce Analytics: from raw transactions to commercial decisions
 
-A dbt Core project demonstrating dimensional modelling and ELT data transformation using the `thelook_ecommerce` public dataset on Google BigQuery.
+Most "dbt project" repos stop at building a clean star schema. This one goes a
+step further and uses that model to answer three questions a commercial or
+product team would actually ask:
 
----
+1. **Which categories make money** once cost of goods and returns are taken out — not just which ones sell?
+2. **Do we keep the customers we win?** What share come back for a second order?
+3. **Which acquisition channel** brings the most valuable, stickiest customers?
 
-## Overview
+The data is modelled with **dbt Core** on **BigQuery** (star schema, tested,
+documented), then an analytics layer turns it into the findings and charts below.
 
-This project builds a clean, tested dimensional model from raw e-commerce transactional data. Raw source tables from BigQuery's public dataset are transformed through a structured three-layer pipeline into analytics-ready fact and dimension tables.
-
-The project demonstrates:
-
-- Modular SQL transformation using dbt Core
-- Dimensional modelling with fact and dimension tables
-- Source freshness tracking and data quality testing
-- Auto-generated documentation and lineage graphs
-- Cloud-native execution on Google BigQuery
+> **Dataset:** [`thelook_ecommerce`](https://console.cloud.google.com/marketplace/product/bigquery-public-data/thelook-ecommerce) — a Google public BigQuery dataset simulating an online retailer. 181k order items across ~100k customers.
 
 ---
 
-## Tech Stack
+## Findings
 
-| Tool | Purpose |
-|---|---|
-| dbt Core 1.11 | Data transformation framework |
-| Google BigQuery | Cloud data warehouse |
-| thelook_ecommerce | Public source dataset |
-| Python 3.12 | Runtime environment |
-| Git | Version control |
+> _Figures below are produced by [`notebooks/generate_insights.py`](notebooks/generate_insights.py), which reads the marts straight from BigQuery. Charts are regenerated on every run._
+
+### 1. Category profitability ≠ category revenue
+
+Ranking categories by **gross margin (£)** rather than revenue changes the
+picture: the chart shows which categories clear a healthy margin after COGS and
+which barely break even once returns are factored in.
+
+![Category gross margin](images/category_margin.png)
+
+- Highest-margin category: **`__`** (`__%` margin)
+- Lowest-margin category: **`__`** (`__%` margin)
+- Highest return rate: **`__`** (`__%` of items returned)
+
+**So what:** a revenue-led view would push spend toward the top-selling
+categories; the margin-and-returns view flags where that revenue is actually
+profitable and where returns are quietly eroding it.
+
+### 2. Retention is the real story
+
+Grouping customers by the month of their first order and measuring how many
+return gives the **repeat-purchase rate** — the single clearest signal of
+whether the business is building a customer base or just renting one.
+
+![Repeat-purchase rate by cohort](images/retention_cohorts.png)
+
+- Overall repeat-purchase rate: **`__%`**
+
+**So what:** acquisition is only half the picture. If repeat rate is low and
+flat across cohorts, the lever isn't more sign-ups — it's getting existing
+customers to a second order.
+
+### 3. Channels are not equal
+
+Channels are easy to judge on sign-up volume; the more useful cut is **revenue
+per customer** and **repeat rate** by channel.
+
+![Revenue per customer by channel](images/channel_value.png)
+
+- Best channel by revenue per customer: **`__`** (£`__`, `__%` repeat)
+
+**So what:** the channel that brings the most customers isn't necessarily the
+one that brings the most *value*. This is where budget should follow.
 
 ---
 
-## Data Architecture
+## The data model
 
-The project follows a standard three-layer dbt architecture:
+A standard three-layer dbt architecture — sources → staging (views) → marts
+(tables) — with an added analytics layer for the questions above.
 
 ```
-Sources (bigquery-public-data)
-    └── Staging layer (views)       Clean and rename raw columns
-            └── Marts layer (tables)    Final dimensional model
+bigquery-public-data.thelook_ecommerce   (sources)
+        │
+        ▼
+  staging/   stg_orders · stg_order_items · stg_products · stg_users   (views, clean + rename)
+        │
+        ▼
+  marts/     fct_order_items · dim_orders · dim_products · dim_users    (tables, star schema)
+        │
+        ▼
+  marts/analytics/   mart_category_performance · mart_customer_retention · mart_channel_performance
 ```
-
-### Staging models (views)
-
-One model per source table. Renames columns consistently, casts data types, and applies no business logic. Each staging model uses the `{{ source() }}` macro to reference raw data.
-
-| Model | Source table | Description |
-|---|---|---|
-| stg_order_items | thelook_ecommerce.order_items | One row per item within an order |
-| stg_orders | thelook_ecommerce.orders | One row per order header |
-| stg_products | thelook_ecommerce.products | Product catalogue |
-| stg_users | thelook_ecommerce.users | Customer records |
-
-### Mart models (tables)
-
-Final analytical tables built from staging models using `{{ ref() }}`. Configured as physical tables for BI performance.
-
-| Model | Type | Rows | Description |
-|---|---|---|---|
-| fct_order_items | Fact table | 181k | One row per item sold. Grain: order item. Contains sale price and fulfilment timestamps. |
-| dim_orders | Dimension | 125k | Order attributes including status, dates, and item count |
-| dim_products | Dimension | 29k | Product attributes including brand, category, cost, and retail price |
-| dim_users | Dimension | 100k | Customer attributes including age, gender, and geographic data |
-
----
-
-## Lineage Graph
 
 ![Lineage graph](lineage.png)
 
-The lineage graph shows the full dependency chain: raw source tables flow into staging models, which feed into the final mart layer. `stg_orders` is referenced by both `fct_order_items` and `dim_orders`, reflecting the join in the fact table SQL.
+| Layer | Models | Materialised as |
+|---|---|---|
+| Staging | 4 | Views — clean and rename, no business logic |
+| Marts (dimensional) | 1 fact + 3 dims | Tables — the star schema |
+| Marts (analytics) | 3 | Tables — the question-answering layer |
 
 ---
 
-## Data Quality Tests
+## Data quality
 
-23 schema tests run across all 8 models using `dbt test`.
+Testing goes beyond "keys are unique". The suite covers:
 
-Tests applied:
-
-- `not_null` on all primary keys and foreign keys
-- `unique` on all primary keys
-
-All 23 tests pass against the live dataset.
+- **Referential integrity** — every `fct_order_items` row must resolve to a real order, user, and product (`relationships` tests)
+- **Accepted values** — order `status` can only be one of the five known states
+- **Range checks** — every rate (margin %, return rate, repeat rate) must fall within sensible bounds, so a bad join can't silently produce a nonsensical chart ([`tests/assert_rates_within_bounds.sql`](tests/assert_rates_within_bounds.sql))
+- **Uniqueness / not-null** on every primary and foreign key
 
 ```
-Done. PASS=23 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=23
+dbt test  →  all passing
 ```
 
 ---
 
-## How to Run
+## How this was built (AI transparency)
+
+I used Claude as a pair-analyst on the analytics layer — sounding out which
+questions were worth asking of this data, sense-checking the margin and
+retention SQL, and tightening this write-up. The dimensional model, the
+analysis design, and the interpretation of the findings are mine.
+
+---
+
+<details>
+<summary><strong>Run it yourself</strong></summary>
 
 ### Prerequisites
-
-- Python 3.12
-- dbt BigQuery adapter: `pip install dbt-bigquery`
-- Google Cloud account with BigQuery enabled
-- gcloud CLI installed and authenticated:
+- Python 3.12, dbt BigQuery adapter (`pip install dbt-bigquery`)
+- A Google Cloud project with BigQuery enabled, authenticated via:
 
 ```bash
 gcloud auth application-default login --scopes=https://www.googleapis.com/auth/cloud-platform
-gcloud auth application-default set-quota-project YOUR_PROJECT_ID
 ```
 
-### Setup
-
-1. Clone this repository:
-
+### Build the model and run the tests
 ```bash
-git clone https://github.com/mayasyed/dbt-ecommerce-portfolio.git
-cd dbt-ecommerce-portfolio
+dbt run         # builds staging, marts, and the analytics layer
+dbt test        # runs the full test suite
+dbt docs generate && dbt docs serve   # browse the lineage graph
 ```
 
-2. Configure your `~/.dbt/profiles.yml`:
+### Generate the findings and charts
+```bash
+cd notebooks
+pip install -r requirements.txt
+python generate_insights.py --project YOUR_GCP_PROJECT --dataset dbt_analytics
+```
+This writes the three charts into `images/` and prints the headline figures to
+paste into the Findings section above.
 
+### Configure `~/.dbt/profiles.yml`
 ```yaml
 my_analytics_project:
   target: dev
@@ -124,61 +153,11 @@ my_analytics_project:
       project: YOUR_GCP_PROJECT_ID
       dataset: dbt_analytics
       threads: 4
-      timeout_seconds: 300
       location: US
 ```
 
-3. Confirm the connection:
-
-```bash
-dbt debug
-```
-
-4. Run all models:
-
-```bash
-dbt run
-```
-
-5. Run all tests:
-
-```bash
-dbt test
-```
-
-6. Generate and serve documentation:
-
-```bash
-dbt docs generate
-dbt docs serve
-```
+</details>
 
 ---
 
-## Project Structure
-
-```
-my_analytics_project/
-├── dbt_project.yml
-├── models/
-│   ├── staging/
-│   │   ├── _sources.yml
-│   │   ├── _staging.yml
-│   │   ├── stg_order_items.sql
-│   │   ├── stg_orders.sql
-│   │   ├── stg_products.sql
-│   │   └── stg_users.sql
-│   └── marts/
-│       ├── _marts.yml
-│       ├── dim_orders.sql
-│       ├── dim_products.sql
-│       ├── dim_users.sql
-│       └── fct_order_items.sql
-└── README.md
-```
-
----
-
-## Dataset
-
-Source: [thelook_ecommerce](https://console.cloud.google.com/marketplace/product/bigquery-public-data/thelook-ecommerce) — a Google-provided public BigQuery dataset simulating an e-commerce business with orders, customers, products, and inventory data.
+**Built by [Mahanoor Shams](https://github.com/mayasyed)** · [LinkedIn](https://www.linkedin.com/in/mahanoor-shams)

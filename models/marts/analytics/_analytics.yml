@@ -1,0 +1,45 @@
+version: 2
+
+models:
+  - name: mart_category_performance
+    description: >
+      Category-level commercial summary: revenue, cost of goods, gross margin,
+      margin %, and return rate. Answers which categories are actually
+      profitable once COGS and returns are accounted for.
+    columns:
+      - name: category
+        tests:
+          - not_null
+      - name: gross_revenue
+        tests:
+          - not_null
+      - name: gross_margin
+        tests:
+          - not_null
+
+  - name: mart_customer_retention
+    description: >
+      Monthly acquisition cohorts with the share of customers who placed a
+      second order. Answers whether the business retains the customers it wins.
+    columns:
+      - name: cohort_month
+        tests:
+          - not_null
+          - unique
+      - name: repeat_purchase_rate
+        tests:
+          - not_null
+
+  - name: mart_channel_performance
+    description: >
+      Per acquisition channel: customers, revenue per customer, orders per
+      customer, and repeat rate. Answers which channels bring the most valuable
+      and stickiest customers.
+    columns:
+      - name: traffic_source
+        tests:
+          - not_null
+          - unique
+      - name: revenue_per_customer
+        tests:
+          - not_null

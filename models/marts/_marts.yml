@@ -2,6 +2,7 @@ version: 2
 
 models:
   - name: dim_users
+    description: One row per customer, with demographics and acquisition channel.
     columns:
       - name: user_id
         tests:
@@ -9,6 +10,7 @@ models:
           - unique
 
   - name: dim_products
+    description: One row per product, with category, cost, and retail price.
     columns:
       - name: product_id
         tests:
@@ -16,24 +18,41 @@ models:
           - unique
 
   - name: dim_orders
+    description: One row per order header, with status and lifecycle timestamps.
     columns:
       - name: order_id
         tests:
           - not_null
           - unique
+      - name: status
+        # catches any unexpected status value sneaking in from the source
+        tests:
+          - accepted_values:
+              values: ['Processing', 'Shipped', 'Complete', 'Returned', 'Cancelled']
 
   - name: fct_order_items
+    description: One row per item sold. Grain - order item.
     columns:
       - name: order_item_id
         tests:
           - not_null
           - unique
       - name: order_id
+        # referential integrity - every fact row must tie back to an order
         tests:
           - not_null
+          - relationships:
+              to: ref('dim_orders')
+              field: order_id
       - name: user_id
         tests:
           - not_null
+          - relationships:
+              to: ref('dim_users')
+              field: user_id
       - name: product_id
         tests:
           - not_null
+          - relationships:
+              to: ref('dim_products')
+              field: product_id
