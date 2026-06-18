@@ -25,7 +25,6 @@ models:
           - not_null
           - unique
       - name: status
-        # catches any unexpected status value sneaking in from the source
         tests:
           - accepted_values:
               values: ['Processing', 'Shipped', 'Complete', 'Returned', 'Cancelled']
@@ -38,7 +37,6 @@ models:
           - not_null
           - unique
       - name: order_id
-        # referential integrity - every fact row must tie back to an order
         tests:
           - not_null
           - relationships:
@@ -56,3 +54,39 @@ models:
           - relationships:
               to: ref('dim_products')
               field: product_id
+
+  - name: fct_experiment_results
+    description: >
+      One row per completed or returned order placed during the A/B test window
+      (2024-01-01 to 2024-01-28). Joins simulated variant assignments to order
+      and order-value data from thelook_ecommerce. Primary metric is order_value
+      for average order value analysis. Guardrail metric is is_returned for
+      return rate analysis.
+    columns:
+      - name: order_id
+        description: Unique identifier for the order. Primary key.
+        tests:
+          - unique
+          - not_null
+      - name: user_id
+        description: The user who placed the order.
+        tests:
+          - not_null
+      - name: variant
+        description: The experiment variant assigned to this user.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['control', 'treatment']
+      - name: order_value
+        description: Total sale price of all items in the order.
+        tests:
+          - not_null
+      - name: is_completed
+        description: 1 if the order status is Complete, 0 otherwise.
+        tests:
+          - not_null
+      - name: is_returned
+        description: 1 if the order status is Returned, 0 otherwise.
+        tests:
+          - not_null

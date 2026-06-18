@@ -40,3 +40,26 @@ models:
         tests:
           - not_null
           - unique
+
+  - name: stg_experiment_assignments
+    description: >
+      Assigns every user in thelook_ecommerce to a control or treatment variant
+      using a deterministic FARM_FINGERPRINT hash of user_id. Each user always
+      maps to the same variant, preventing crossover contamination. Used as the
+      assignment layer for the checkout free-shipping banner A/B test.
+    columns:
+      - name: user_id
+        description: Unique identifier for the user. Primary key.
+        tests:
+          - unique
+          - not_null
+      - name: variant
+        description: Experiment variant assigned to the user. Either control or treatment.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['control', 'treatment']
+      - name: variant_key
+        description: Raw modulo value (0 or 1) used to derive the variant.
+        tests:
+          - not_null
