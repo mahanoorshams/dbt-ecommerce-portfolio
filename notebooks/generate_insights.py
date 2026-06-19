@@ -21,9 +21,9 @@ from google.cloud import bigquery
 IMAGES_DIR = Path(__file__).resolve().parent.parent / "images"
 IMAGES_DIR.mkdir(exist_ok=True)
 
-BACKGROUND = "#CBD7DBFF"   # warm natural grey applied to all charts
+BACKGROUND = "#DDDDDC"   # warm natural grey applied to all charts
 PURPLE     = "#6B21A8"   # gross margin bars
-GREEN      = "#30A681"   # channel chart bars
+GREEN      = "#0D5349"   # channel chart bars
 TEAL       = "#0D9488"   # cost of goods bars and retention line
 LABEL      = "#FFFFFF"   # text on coloured bars
 
@@ -146,22 +146,36 @@ def headline_figures(
     cat: pd.DataFrame, ret: pd.DataFrame, chan: pd.DataFrame
 ) -> None:
     overall_repeat = ret["repeat_customers"].sum() / ret["new_customers"].sum()
-    best_margin    = cat.sort_values("gross_margin_pct", ascending=False).iloc[0]
-    worst_margin   = cat.sort_values("gross_margin_pct").iloc[0]
-    worst_returns  = cat.sort_values("return_rate", ascending=False).iloc[0]
     best_channel   = chan.sort_values("revenue_per_customer", ascending=False).iloc[0]
+
+    # Aggregate across departments and filter to the same top 10 shown in the chart
+    # so the headline figures reference categories that are actually visible.
+    cat_agg = (
+        cat.groupby("category", as_index=False)
+        .agg(
+            gross_revenue=("gross_revenue", "sum"),
+            gross_margin=("gross_margin", "sum"),
+            return_rate=("return_rate", "mean"),
+        )
+    )
+    cat_agg["gross_margin_pct"] = cat_agg["gross_margin"] / cat_agg["gross_revenue"]
+    top10 = cat_agg.sort_values("gross_margin", ascending=False).head(10)
+
+    best_margin   = top10.sort_values("gross_margin_pct", ascending=False).iloc[0]
+    worst_margin  = top10.sort_values("gross_margin_pct").iloc[0]
+    worst_returns = top10.sort_values("return_rate", ascending=False).iloc[0]
 
     print("\n" + "=" * 60)
     print("HEADLINE FIGURES  (paste these into the README)")
     print("=" * 60)
     print(f"Overall repeat purchase rate : {overall_repeat:.1%}")
-    print(f"Highest margin category      : {best_margin['category']} "
+    print(f"Highest margin category (top 10) : {best_margin['category']} "
           f"({best_margin['gross_margin_pct']:.0%} margin)")
-    print(f"Lowest margin category       : {worst_margin['category']} "
+    print(f"Lowest margin category (top 10)  : {worst_margin['category']} "
           f"({worst_margin['gross_margin_pct']:.0%} margin)")
-    print(f"Highest return rate          : {worst_returns['category']} "
+    print(f"Highest return rate (top 10)     : {worst_returns['category']} "
           f"({worst_returns['return_rate']:.0%} of items returned)")
-    print(f"Best channel by rev/customer : {best_channel['traffic_source']} "
+    print(f"Best channel by rev/customer     : {best_channel['traffic_source']} "
           f"(£{best_channel['revenue_per_customer']:.0f}, "
           f"{best_channel['repeat_purchase_rate']:.0%} repeat)")
     print("=" * 60 + "\n")

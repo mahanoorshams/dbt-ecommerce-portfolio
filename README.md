@@ -31,9 +31,9 @@ so the percentages do not always increase as the bars get longer.
 
 ![Category gross margin](images/category_margin.png)
 
-- Highest margin category: **`Blazers & Jackets`** (`62%` margin)
-- Lowest margin category: **`Clothing Sets`** (`38%` margin)
-- Highest return rate: **`Clothing Sets`** (`15%` of items returned)
+- Highest margin category (in chart): **`Suits & Sport Coats`** (`60%` margin)
+- Lowest margin category (in chart): **`Jeans`** (`47%` margin)
+- Highest return rate (in chart): **`Shorts`** (`12%` of items returned)
 
 **So what:** a revenue view would push spend toward the top-selling categories. The margin and returns view flags where that revenue is actually profitable, and where returns are quietly eroding it.
 
