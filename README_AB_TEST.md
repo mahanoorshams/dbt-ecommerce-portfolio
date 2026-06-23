@@ -18,7 +18,7 @@ Neither the conversion rate lift (+0.9 percentage points, p = 0.82) nor the AOV 
 
 This is not a verdict on whether the banner works. It is a verdict on whether this test had enough statistical power to detect an effect. It did not. The experiment captured 463 total orders against a required sample of 14,988, giving it roughly 3% statistical power rather than the target 80%.
 
-The more interesting finding came from the power calculation itself: at this dataset's traffic volume of around 12 completed orders per day, detecting a 5% AOV lift would require over 1,200 days of live testing. That is the real result of this project, and it is documented transparently rather than buried.
+The more interesting finding came from the power calculation itself: at this dataset’s traffic volume of around 12 completed orders per day, detecting a 5% AOV lift would require over 1,200 days of live testing. That is the real result of this project, and it is documented transparently rather than buried.
 
 ---
 
@@ -33,6 +33,10 @@ The project spans four layers:
 **Two Python notebooks** for the analysis. The EDA notebook explores data quality, variant balance (50.8 vs 49.2, essentially perfect), and the raw metric distributions. The statistical analysis notebook runs a two-proportion z-test on conversion rate and a Welch t-test on AOV, calculates 95% confidence intervals for both, checks the guardrail metric, and produces a written product recommendation.
 
 **A Power BI dashboard** built programmatically by writing PBIR JSON files directly into the PBIP project structure using a Node.js script. The dashboard shows KPI cards for each variant, comparison bar charts, and the full go/no-go verdict as a text panel.
+
+![Statistical results: 95% confidence intervals for conversion rate and AOV by variant](images/statistical_results.png)
+
+*95% confidence intervals for both primary metrics. The wide, heavily overlapping intervals confirm the test is underpowered rather than simply null.*
 
 ---
 
@@ -62,7 +66,7 @@ The standard deviation being larger than the mean is worth noting. Order values 
 ## Problems I Hit and How I Fixed Them
 
 **The power calculation produced an impossible test duration.**
-Running the sample size formula with real baseline figures gave 1,210 days, not the roughly 30 days I expected. My first instinct was to check whether I had made a calculation error. I had not. The standard deviation of order values ($93.98) is larger than the mean ($86.03), which means the coefficient of variation is above 1, and detecting a 5% lift on a metric that variable requires an enormous sample. The fix was to document this finding honestly in the experiment design document and frame the simulation approach as the deliberate response to a real constraint rather than a workaround.
+Running the sample size formula with real baseline figures gave 1,210 days, not the roughly 30 days I expected. My first instinct was to check whether I had made a calculation error. I had not. The standard deviation of order values (£93.98) is larger than the mean (£86.03), which means the coefficient of variation is above 1, and detecting a 5% lift on a metric that variable requires an enormous sample. The fix was to document this finding honestly in the experiment design document and frame the simulation approach as the deliberate response to a real constraint rather than a workaround.
 
 **The dbt mart model failed on the first run with an `Unrecognized name: id` error.**
 The `fct_experiment_results` model referenced `id as order_id` in the orders CTE, but the `thelook_ecommerce.orders` table actually stores the primary key as `order_id` directly. A five-second look at the source schema confirmed the issue. The fix was a single-line edit: remove the alias and reference `order_id` directly.
