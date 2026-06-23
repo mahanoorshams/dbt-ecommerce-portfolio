@@ -1,0 +1,74 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "v12Verdict",
+  "position": {
+    "x": 20.58325935107791,
+    "y": 559.86465434931915,
+    "z": 1000,
+    "height": 145.45503274761722,
+    "width": 1239.11221293489,
+    "tabOrder": 1012
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "Verdict: Inconclusive. Do not roll out.",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Neither the conversion rate lift (+0.9pp, p = 0.82) nor the AOV difference (−£0.49, p = 0.96) reached statistical significance at alpha = 0.05. The confidence intervals overlap heavily and the experiment is massively underpowered: 463 total orders against the required 14,988. At this dataset’s traffic volume (~12 orders per day), detecting a 5% AOV lift would require over 1,200 days on live traffic. No guardrail breaches were observed: treatment return rate did not exceed control by more than 3 percentage points.",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "10pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Recommended next step: rerun on production data with a minimum of 7,500 orders per variant before making any rollout decision.",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "10pt"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

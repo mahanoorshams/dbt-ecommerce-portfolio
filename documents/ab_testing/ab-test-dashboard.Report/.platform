@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "ab-test-dashboard"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "2850b0a8-6e8f-4539-89dc-faf22d47febe"
+  }
+}

@@ -1,0 +1,133 @@
+table fct_experiment_results
+	lineageTag: 6123eccb-da96-480a-abc7-2b2bc2bb8052
+
+	measure 'Control Orders' = CALCULATE(COUNTROWS('fct_experiment_results'), 'fct_experiment_results'[variant] = "control")
+		formatString: #,##0
+		lineageTag: 1610e4bb-f7d0-414d-9a32-3d1b2cdf0d0b
+
+	measure 'Treatment Orders' = CALCULATE(COUNTROWS('fct_experiment_results'), 'fct_experiment_results'[variant] = "treatment")
+		formatString: #,##0
+		lineageTag: 3ee0f3a9-95f0-4b60-bdc1-31c251a3c213
+
+	measure 'Control AOV' = CALCULATE(AVERAGE('fct_experiment_results'[order_value]), 'fct_experiment_results'[variant] = "control")
+		formatString: \£#,##0.00
+		lineageTag: 586eba03-73f2-47a4-a66f-d78d355e84f2
+
+	measure 'Treatment AOV' = CALCULATE(AVERAGE('fct_experiment_results'[order_value]), 'fct_experiment_results'[variant] = "treatment")
+		formatString: \£#,##0.00
+		lineageTag: 1a7d08cc-742d-4ce6-8e40-972efa68abd6
+
+	measure 'Control Conv Rate' = CALCULATE(AVERAGE('fct_experiment_results'[is_completed]), 'fct_experiment_results'[variant] = "control")
+		formatString: 0.0%
+		lineageTag: d051fc0a-7ba4-477e-8e42-11756a07cc1c
+
+	measure 'Treatment Conv Rate' = CALCULATE(AVERAGE('fct_experiment_results'[is_completed]), 'fct_experiment_results'[variant] = "treatment")
+		formatString: 0.0%
+		lineageTag: 83d9f83f-01d3-4d88-911c-4a2c182255cb
+
+	measure AOV = AVERAGE('fct_experiment_results'[order_value])
+		formatString: \£#,##0.00
+		lineageTag: 753faf45-4374-44ba-bc16-953846660443
+
+	measure 'Conversion Rate' = AVERAGE('fct_experiment_results'[is_completed])
+		formatString: 0.0%
+		lineageTag: 46b3c4c8-36f7-4c6a-b399-d53c657e7a19
+
+	column order_id
+		dataType: int64
+		formatString: 0
+		lineageTag: e8cf254b-e6f2-48f3-b0bf-14ffb741d6e2
+		summarizeBy: sum
+		sourceColumn: order_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column user_id
+		dataType: int64
+		formatString: 0
+		lineageTag: fd992601-af97-474f-bbe0-f091b88e2c76
+		summarizeBy: sum
+		sourceColumn: user_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column variant
+		dataType: string
+		lineageTag: a28459a0-20b9-4e55-b5af-6e3ce76143f4
+		summarizeBy: none
+		sourceColumn: variant
+
+		annotation SummarizationSetBy = Automatic
+
+	column order_status
+		dataType: string
+		lineageTag: 9ae1c787-5800-49f9-94d1-f2e1b6890c02
+		summarizeBy: none
+		sourceColumn: order_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column order_created_at
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 7e73e478-32d9-42fb-bb67-2ae906f288b1
+		summarizeBy: none
+		sourceColumn: order_created_at
+
+		variation Variation
+			isDefault
+			relationship: a90d272f-d59c-44e9-b51c-2d26ac9fafc9
+			defaultHierarchy: LocalDateTable_ad738008-6a23-49df-afbe-1ad4424a69cf.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column order_value
+		dataType: double
+		lineageTag: 05e4465a-358e-4184-bd79-91a1a2a2cf7f
+		summarizeBy: sum
+		sourceColumn: order_value
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column item_count
+		dataType: int64
+		formatString: 0
+		lineageTag: f24d4925-429a-4fd2-b851-cc96ea722ae5
+		summarizeBy: sum
+		sourceColumn: item_count
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_completed
+		dataType: int64
+		formatString: 0
+		lineageTag: 9e793a02-55f7-4bcb-81ea-d0748e86b8cf
+		summarizeBy: sum
+		sourceColumn: is_completed
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_returned
+		dataType: int64
+		formatString: 0
+		lineageTag: cbd0be37-2b3c-4c7e-94fc-b50eb6d12864
+		summarizeBy: sum
+		sourceColumn: is_returned
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fct_experiment_results = m
+		mode: import
+		source =
+				let
+				    Source = GoogleBigQuery.Database([Implementation="2.0"]),
+				    #"dbt-portfolio-498511_Database" = Source{[Name="dbt-portfolio-498511",Kind="Database"]}[Data],
+				    dbt_analytics_Schema = #"dbt-portfolio-498511_Database"{[Name="dbt_analytics",Kind="Schema"]}[Data],
+				    fct_experiment_results_Table = dbt_analytics_Schema{[Name="fct_experiment_results",Kind="Table"]}[Data]
+				in
+				    fct_experiment_results_Table
+
+	annotation PBI_ResultType = Table
+

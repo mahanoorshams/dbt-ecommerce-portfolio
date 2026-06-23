@@ -1,0 +1,5 @@
+relationship a90d272f-d59c-44e9-b51c-2d26ac9fafc9
+	joinOnDateBehavior: datePartOnly
+	fromColumn: fct_experiment_results.order_created_at
+	toColumn: LocalDateTable_ad738008-6a23-49df-afbe-1ad4424a69cf.Date
+

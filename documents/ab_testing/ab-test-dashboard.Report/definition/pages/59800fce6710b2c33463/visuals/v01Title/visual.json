@@ -1,0 +1,43 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "v01Title",
+  "position": {
+    "x": 20,
+    "y": 10,
+    "z": 1000,
+    "width": 1240,
+    "height": 46,
+    "tabOrder": 1001
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "A/B Test: Checkout Free Shipping Banner  —  Results",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "16pt",
+                      "color": {
+                        "solid": {
+                          "color": "#1E1E2E"
+                        }
+                      }
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "center"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
