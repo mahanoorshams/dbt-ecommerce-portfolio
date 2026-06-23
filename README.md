@@ -37,6 +37,15 @@ The data is modelled with **dbt Core** on **BigQuery** (star schema, tested, doc
 
 ---
 
+## Projects in this repo
+
+| Project | Description | Key files |
+|---|---|---|
+| **Ecommerce Analytics** | dbt dimensional model answering category, retention, and channel questions | `models/`, `notebooks/generate_insights.py` |
+| **A/B Test: Checkout Free Shipping Banner** | End to end experiment design, dbt simulation, Python statistical analysis, Power BI dashboard | [`README_AB_TEST.md`](README_AB_TEST.md), `documents/ab_testing/`, `notebooks/02_*`, `notebooks/03_*` |
+
+---
+
 ## Findings
 
 > _Figures below are produced by [`notebooks/generate_insights.py`](notebooks/generate_insights.py), which reads the marts straight from BigQuery. Charts are regenerated on every run._
@@ -55,7 +64,7 @@ Note: bars are sorted by absolute gross margin in £, not by margin percentage, 
 - Lowest margin category (in chart): **`Jeans`** (`47%` margin)
 - Highest return rate (in chart): **`Shorts`** (`12%` of items returned)
 
-**So what:** a revenue view would push spend toward the top-selling categories. The margin and returns view flags where that revenue is actually profitable, and where returns are quietly eroding it.
+**So what:** a revenue view would push spend toward the top-selling categories. The margin view changes the ranking: Outerwear drives the most absolute profit, but Suits and Sport Coats keeps 60p of every £1 of revenue, suggesting it could scale efficiently with targeted investment. Shorts has the highest return rate at 12%, meaning a meaningful share of its revenue is being handed back. A practical next step would be to deduct return costs from the margin figure to get a truer net margin per category.
 
 ### 2. Retention is the real story
 
@@ -67,7 +76,7 @@ Grouping customers by the month of their first order and measuring how many retu
 
 > _Caveat: "repeat" here means two or more orders ever, so the most recent cohorts have had less time to place a second order and will read lower for that reason alone. The dip toward recent months is partly an observation window effect, not pure retention decay. A fixed window (such as repeat within 90 days of first order) is the natural next iteration._
 
-**So what:** acquisition is only half the picture. If repeat rate is low and flat across cohorts, the lever is not more new customers. It is getting existing customers to a second order.
+**So what:** acquisition is only half the picture. If repeat rate is low and flat across cohorts, the lever is not more new customers. It is getting existing customers to a second order. The metric used here (ever placed 2+ orders) overstates true retention for recent cohorts who have not had time to return. A 90-day repeat window would give a fairer read and is the natural next iteration. If the 90-day rate is also flat or declining, the business has a retention problem that more acquisition spend will not fix.
 
 ### 3. Channels are not equal
 
@@ -77,7 +86,7 @@ Channels are easy to judge on signup volume. The more useful cut is **revenue pe
 
 - Best channel by revenue per customer: **`Organic`** (£`93`, `25%` repeat)
 
-**So what:** the channel that brings the most customers is not necessarily the one that brings the most value. This is where budget should follow.
+**So what:** the channel that brings the most customers is not necessarily the one that brings the most value. Organic brings the highest revenue per customer at £93 and a 25% repeat rate, which suggests customers who find you without paid media tend to have stronger product intent. A practical recommendation would be to review the paid channel mix, compare the cost per acquired customer in each channel against the revenue per customer shown here, and reallocate budget toward channels where the customer lifetime value justifies the acquisition cost.
 
 ---
 
